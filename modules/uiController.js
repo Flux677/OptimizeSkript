@@ -39,12 +39,13 @@ export class UIController {
     getFileIcon(extension) {
         const icons = {
             '.js': 'JS',
+            '.sk': 'SK'
             '.jsx': 'JSX',
             '.ts': 'TS',
             '.tsx': 'TSX',
             '.json': 'JSON',
             '.yml': 'YML',
-            '.yaml': 'YML'
+            '.yaml': 'YML',
         };
         return icons[extension] || 'FILE';
     }

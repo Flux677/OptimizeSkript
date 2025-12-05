@@ -39,7 +39,7 @@ export class UIController {
     getFileIcon(extension) {
         const icons = {
             '.js': 'JS',
-            '.sk': 'SK'
+            '.sk': 'SK',
             '.jsx': 'JSX',
             '.ts': 'TS',
             '.tsx': 'TSX',

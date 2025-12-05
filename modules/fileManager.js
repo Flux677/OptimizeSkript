@@ -5,7 +5,7 @@ export class FileManager {
     }
 
     addFile(file) {
-        const supportedExtensions = ['.js', '.jsx', '.ts', '.tsx', '.json', '.yml', '.yaml'];
+        const supportedExtensions = ['.js', 'sk', '.jsx', '.ts', '.tsx', '.json', '.yml', '.yaml'];
         const fileExtension = this.getFileExtension(file.name);
 
         if (!supportedExtensions.includes(fileExtension)) {

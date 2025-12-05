@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plugin Script Optimizer - AI Powered</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🔧 Plugin Script Optimizer</h1>
+            <p class="subtitle">Perbaiki & Optimalisasi Plugin dengan AI Claude</p>
+        </header>
+
+        <div class="main-content">
+            <!-- File Upload Section -->
+            <div class="card">
+                <h2>📁 Upload Plugin Scripts</h2>
+                <div class="upload-area" id="uploadArea">
+                    <input type="file" id="fileInput" multiple accept=".js,.jsx,.ts,.tsx,.json,.yml,.yaml" hidden>
+                    <div class="upload-placeholder">
+                        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="17 8 12 3 7 8"></polyline>
+                            <line x1="12" y1="3" x2="12" y2="15"></line>
+                        </svg>
+                        <p>Klik atau drag & drop file plugin disini</p>
+                        <span class="file-types">Mendukung: .js, .jsx, .ts, .tsx, .json, .yml</span>
+                    </div>
+                </div>
+                <div id="fileList" class="file-list"></div>
+            </div>
+
+            <!-- Options Section -->
+            <div class="card">
+                <h2>⚙️ Opsi Optimasi</h2>
+                <div class="options-grid">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="fixSyntax" checked>
+                        <span>Perbaiki Syntax Errors</span>
+                    </label>
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="optimizeCode" checked>
+                        <span>Optimalisasi Performa</span>
+                    </label>
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="addComments" checked>
+                        <span>Tambah Dokumentasi</span>
+                    </label>
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="modernize" checked>
+                        <span>Modernisasi Kode</span>
+                    </label>
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="securityCheck" checked>
+                        <span>Security Audit</span>
+                    </label>
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="bestPractices" checked>
+                        <span>Apply Best Practices</span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="action-buttons">
+                <button id="processBtn" class="btn btn-primary" disabled>
+                    <span>🚀 Proses Semua File</span>
+                </button>
+                <button id="clearBtn" class="btn btn-secondary">
+                    <span>🗑️ Clear All</span>
+                </button>
+            </div>
+
+            <!-- Progress Section -->
+            <div id="progressSection" class="card progress-section" style="display: none;">
+                <h2>📊 Progress</h2>
+                <div class="progress-bar">
+                    <div id="progressFill" class="progress-fill"></div>
+                </div>
+                <p id="progressText" class="progress-text">Memproses file...</p>
+            </div>
+
+            <!-- Results Section -->
+            <div id="resultsSection" class="card results-section" style="display: none;">
+                <h2>✅ Hasil Optimasi</h2>
+                <div id="resultsList" class="results-list"></div>
+                <button id="downloadAllBtn" class="btn btn-success">
+                    <span>💾 Download Semua File</span>
+                </button>
+            </div>
+        </div>
+
+        <footer>
+            <p>Powered by Claude AI | Made with ❤️</p>
+        </footer>
+    </div>
+
+    <script type="module" src="app.js"></script>
+</body>
+</html>

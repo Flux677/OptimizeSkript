@@ -1,0 +1,23 @@
+{
+  "name": "plugin-optimizer",
+  "version": "1.0.0",
+  "description": "AI-powered plugin script optimizer using Claude API",
+  "type": "module",
+  "scripts": {
+    "dev": "vercel dev",
+    "build": "echo 'No build step required'",
+    "deploy": "vercel --prod"
+  },
+  "keywords": [
+    "plugin",
+    "optimizer",
+    "claude",
+    "ai",
+    "code-optimization"
+  ],
+  "author": "Felt",
+  "license": "MIT",
+  "devDependencies": {
+    "vercel": "^33.0.0"
+  }
+}

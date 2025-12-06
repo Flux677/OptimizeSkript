@@ -1,12 +1,18 @@
 import { FileManager } from './modules/fileManager.js';
 import { ClaudeAPI } from './modules/claudeAPI.js';
 import { UIController } from './modules/uiController.js';
+import { Validator } from './modules/validator.js';
+import { BackupManager } from './modules/backupManager.js';
+import { ErrorHandler } from './modules/errorHandler.js';
 
 class PluginOptimizer {
     constructor() {
         this.fileManager = new FileManager();
         this.claudeAPI = new ClaudeAPI();
         this.uiController = new UIController();
+        this.validator = new Validator();
+        this.backupManager = new BackupManager();
+        this.errorHandler = new ErrorHandler();
         this.init();
     }
 
@@ -60,6 +66,44 @@ class PluginOptimizer {
             this.fileManager.addFile(file);
         });
         this.updateUI();
+        this.checkSkriptFiles();
+    }
+
+    checkSkriptFiles() {
+        const files = this.fileManager.getFiles();
+        const hasSkript = files.some(f => f.extension === '.sk');
+        
+        if (hasSkript) {
+            // Disable modernize option for Skript files
+            const modernizeCheckbox = document.getElementById('modernize');
+            modernizeCheckbox.checked = false;
+            
+            // Show warning
+            this.showSkriptWarning();
+        }
+    }
+
+    showSkriptWarning() {
+        const existingWarning = document.getElementById('skriptWarning');
+        if (existingWarning) return;
+
+        const warning = document.createElement('div');
+        warning.id = 'skriptWarning';
+        warning.style.cssText = `
+            background: rgba(245, 158, 11, 0.2);
+            border: 1px solid #f59e0b;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            color: #fbbf24;
+        `;
+        warning.innerHTML = `
+            <strong>⚠️ Skript Files Detected</strong><br>
+            <small>Modernize option telah di-disable. Tool akan mempertahankan syntax Skript original.</small>
+        `;
+        
+        const optionsCard = document.querySelector('.options-grid').parentElement;
+        optionsCard.insertBefore(warning, document.querySelector('.options-grid'));
     }
 
     updateUI() {
@@ -102,24 +146,45 @@ class PluginOptimizer {
                 );
 
                 const content = await this.fileManager.readFileContent(file.file);
+                
+                // Create backup before processing
+                this.backupManager.createBackup(file.name, content);
+                
+                // Pre-validate
+                const validation = this.validator.preValidate(file.name, content);
+                
+                // If Skript file, ensure modernize is disabled
+                const fileOptions = { ...options };
+                if (validation.isSkript) {
+                    fileOptions.modernize = false;
+                }
+
                 const result = await this.claudeAPI.optimizePlugin(
                     file.name,
                     content,
-                    options
+                    fileOptions
+                );
+
+                // Add validation info to result
+                result.preValidation = validation;
+                
+                // Compare with backup
+                result.comparison = this.backupManager.compareWithBackup(
+                    file.name, 
+                    result.optimizedCode || content
                 );
 
                 results.push({
                     fileName: file.name,
                     success: true,
+                    originalContent: content,
                     ...result
                 });
 
             } catch (error) {
-                results.push({
-                    fileName: file.name,
-                    success: false,
-                    error: error.message
-                });
+                console.error(`Error processing ${file.name}:`, error);
+                const errorResult = this.errorHandler.handleAPIError(error, file.name);
+                results.push(errorResult);
             }
 
             processed++;
@@ -128,15 +193,20 @@ class PluginOptimizer {
         this.uiController.updateProgress(100, 'Selesai!');
         setTimeout(() => {
             this.uiController.hideProgress();
-            this.uiController.showResults(results);
+            this.uiController.showResults(results, this.backupManager);
         }, 500);
     }
 
     clearAll() {
         this.fileManager.clearAll();
+        this.backupManager.clearBackups();
         this.updateUI();
         this.uiController.hideProgress();
         this.uiController.hideResults();
+        
+        // Remove skript warning if exists
+        const warning = document.getElementById('skriptWarning');
+        if (warning) warning.remove();
     }
 
     downloadAllResults() {

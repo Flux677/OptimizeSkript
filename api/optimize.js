@@ -33,6 +33,24 @@ export default async function handler(req, res) {
             return res.status(500).json({ error: 'ANTHROPIC_API_KEY not configured' });
         }
 
+        // Enhanced system prompt for better accuracy
+        const systemPrompt = `You are an expert code optimizer with deep knowledge of multiple programming languages including:
+- JavaScript/TypeScript/React
+- Python
+- Java
+- Skript (Minecraft plugin language)
+- YAML/JSON
+
+CRITICAL: When working with Skript files (.sk), you MUST:
+1. Preserve ALL Skript-specific syntax (command, on, set, if, loop, etc.)
+2. NEVER convert to JavaScript, Java, or any other language
+3. Keep variable syntax as {variable} or {_variable}
+4. Maintain indentation with tabs/spaces as in original
+5. Do NOT add semicolons
+6. Fix errors according to Skript language rules ONLY
+
+For other languages, apply modern best practices while maintaining the original language.`;
+
         // Call Claude API
         const response = await fetch('https://api.anthropic.com/v1/messages', {
             method: 'POST',
@@ -44,7 +62,8 @@ export default async function handler(req, res) {
             body: JSON.stringify({
                 model: 'claude-sonnet-4-20250514',
                 max_tokens: 8000,
-                temperature: 0.3,
+                temperature: 0.2, // Lower temperature for more consistent output
+                system: systemPrompt,
                 messages: [
                     {
                         role: 'user',
@@ -81,7 +100,7 @@ export default async function handler(req, res) {
                 // If no JSON found, create structured response
                 result = {
                     optimizedCode: textContent,
-                    changes: ['Kode telah dioptimasi dan diperbaiki'],
+                    changes: ['Kode telah dioptimasi dan diperbaiki sesuai bahasa yang digunakan'],
                     issues: ['Analisis lengkap telah dilakukan'],
                     suggestions: ['Review kode untuk memastikan semuanya sesuai kebutuhan']
                 };
@@ -94,6 +113,26 @@ export default async function handler(req, res) {
                 issues: [],
                 suggestions: []
             };
+        }
+
+        // Validate that we didn't accidentally convert Skript to another language
+        const isSkriptFile = fileName.endsWith('.sk') || 
+                            content.includes('command ') || 
+                            content.includes('on load:');
+        
+        if (isSkriptFile && result.optimizedCode) {
+            // Basic check: if output has JS syntax, revert to original
+            const hasJSSyntax = result.optimizedCode.includes('const ') || 
+                               result.optimizedCode.includes('let ') ||
+                               result.optimizedCode.includes('=>') ||
+                               result.optimizedCode.includes('function(');
+            
+            if (hasJSSyntax) {
+                console.warn('Detected JS syntax in Skript file output, reverting to original');
+                result.optimizedCode = content;
+                result.changes = ['PRESERVED: Kode original dipertahankan karena terdeteksi perubahan syntax yang tidak sesuai'];
+                result.issues = ['System mencegah perubahan yang bisa merusak Skript syntax'];
+            }
         }
 
         // Return the result

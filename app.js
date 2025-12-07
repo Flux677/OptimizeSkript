@@ -4,6 +4,7 @@ import { UIController } from './modules/uiController.js';
 import { Validator } from './modules/validator.js';
 import { BackupManager } from './modules/backupManager.js';
 import { ErrorHandler } from './modules/errorHandler.js';
+import { AutoSave } from './modules/autoSave.js';
 
 class PluginOptimizer {
     constructor() {
@@ -13,11 +14,13 @@ class PluginOptimizer {
         this.validator = new Validator();
         this.backupManager = new BackupManager();
         this.errorHandler = new ErrorHandler();
+        this.autoSave = new AutoSave();
         this.init();
     }
 
     init() {
         this.setupEventListeners();
+        this.checkForSavedResults();
     }
 
     setupEventListeners() {
@@ -53,10 +56,6 @@ class PluginOptimizer {
 
         document.getElementById('clearBtn').addEventListener('click', () => {
             this.clearAll();
-        });
-
-        document.getElementById('downloadAllBtn')?.addEventListener('click', () => {
-            this.downloadAllResults();
         });
     }
 
@@ -191,10 +190,82 @@ class PluginOptimizer {
         }
 
         this.uiController.updateProgress(100, 'Selesai!');
+        
+        // Auto-save results to browser storage
+        this.autoSave.saveResults(results);
+        
+        // Auto-export to JSON file as backup
+        this.autoSave.autoExportResults(results);
+        
         setTimeout(() => {
             this.uiController.hideProgress();
             this.uiController.showResults(results, this.backupManager);
+            
+            // Setup download all button after results shown
+            this.setupDownloadAllButton(results);
+            
+            this.errorHandler.showSuccessNotification(
+                `✅ ${results.filter(r => r.success).length}/${results.length} files optimized successfully!`
+            );
         }, 500);
+    }
+
+    setupDownloadAllButton(results) {
+        const downloadAllBtn = document.getElementById('downloadAllBtn');
+        if (downloadAllBtn) {
+            // Remove old listener
+            const newBtn = downloadAllBtn.cloneNode(true);
+            downloadAllBtn.parentNode.replaceChild(newBtn, downloadAllBtn);
+            
+            // Add new listener
+            newBtn.addEventListener('click', () => {
+                this.downloadAllResults(results);
+            });
+        }
+    }
+
+    downloadAllResults(results) {
+        if (!results || results.length === 0) {
+            this.errorHandler.showErrorNotification('No results to download');
+            return;
+        }
+
+        const successResults = results.filter(r => r.success && r.optimizedCode);
+        
+        if (successResults.length === 0) {
+            this.errorHandler.showErrorNotification('No successful results to download');
+            return;
+        }
+
+        // Download each file with delay
+        let downloaded = 0;
+        successResults.forEach((result, index) => {
+            setTimeout(() => {
+                this.downloadSingleFile(result);
+                downloaded++;
+                
+                if (downloaded === successResults.length) {
+                    this.errorHandler.showSuccessNotification(
+                        `✅ Downloaded ${downloaded} file(s) successfully!`
+                    );
+                }
+            }, index * 500); // 500ms delay between downloads
+        });
+    }
+
+    downloadSingleFile(result) {
+        const fileName = `optimized_${result.fileName}`;
+        const content = result.optimizedCode;
+        
+        const blob = new Blob([content], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = fileName;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
     }
 
     clearAll() {
@@ -209,9 +280,25 @@ class PluginOptimizer {
         if (warning) warning.remove();
     }
 
-    downloadAllResults() {
-        // This will be implemented based on results
-        console.log('Download all results');
+    checkForSavedResults() {
+        if (this.autoSave.hasSavedResults()) {
+            this.autoSave.showRestoreNotification(
+                (results) => {
+                    // Restore results
+                    this.uiController.showResults(results, this.backupManager);
+                    this.setupDownloadAllButton(results);
+                    this.errorHandler.showSuccessNotification('Results restored successfully!');
+                },
+                () => {
+                    // Dismiss - clear old results
+                    this.autoSave.clearSavedResults();
+                }
+            );
+        }
+    }
+
+    downloadAllResults(results) {
+        console.log('Download all results - fallback');
     }
 }
 

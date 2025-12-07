@@ -5,9 +5,11 @@ import { Validator } from './modules/validator.js';
 import { BackupManager } from './modules/backupManager.js';
 import { ErrorHandler } from './modules/errorHandler.js';
 import { AutoSave } from './modules/autoSave.js';
+import { Scanner } from './modules/scanner.js';
 
 class PluginOptimizer {
     constructor() {
+        // Optimizer modules
         this.fileManager = new FileManager();
         this.claudeAPI = new ClaudeAPI();
         this.uiController = new UIController();
@@ -15,12 +17,49 @@ class PluginOptimizer {
         this.backupManager = new BackupManager();
         this.errorHandler = new ErrorHandler();
         this.autoSave = new AutoSave();
+        
+        // Scanner module
+        this.scanner = new Scanner();
+        
+        this.currentMode = 'optimizer';
         this.init();
     }
 
     init() {
+        this.setupModeSwitcher();
         this.setupEventListeners();
         this.checkForSavedResults();
+    }
+
+    setupModeSwitcher() {
+        document.querySelectorAll('.mode-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const mode = e.currentTarget.dataset.mode;
+                this.switchMode(mode);
+            });
+        });
+    }
+
+    switchMode(mode) {
+        this.currentMode = mode;
+        
+        // Update buttons
+        document.querySelectorAll('.mode-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.mode === mode);
+        });
+        
+        // Update content
+        document.querySelectorAll('.mode-content').forEach(content => {
+            content.classList.toggle('active', content.id === `${mode}Mode`);
+        });
+
+        // Initialize scanner when switching to scanner mode
+        if (mode === 'scanner') {
+            if (!window.scanner) {
+                window.scanner = this.scanner;
+            }
+            this.scanner.init();
+        }
     }
 
     setupEventListeners() {
